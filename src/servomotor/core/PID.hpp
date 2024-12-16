@@ -9,16 +9,15 @@ namespace servomotor {
             float kd;
             T value_abs_max;
 
-            T clamp(T value) { return constrain(value, -this->value_abs_max, this->value_abs_max); }
+            T clamp(T value) const { return constrain(value, -this->value_abs_max, this->value_abs_max); }
         };
 
         /// ПИД-Регулятор
         template<class T, class TimeType = uint32_t> class PID {
-        public:
-            using TimeMs = TimeType;
-
         private:
-            const PIDSettings<T> &settings;
+
+            using TimeMs = TimeType;
+            const PIDSettings<T> settings;
 
             T target{0};
 
@@ -27,6 +26,9 @@ namespace servomotor {
             mutable TimeMs last_time{0};
 
         public:
+
+            explicit PID(const PIDSettings<T> settings) :
+                settings{settings} {}
 
             /// Установить целевое значение регулятора
             void setTarget(T new_target) { this->target = this->settings.clamp(new_target); }
