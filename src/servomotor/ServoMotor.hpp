@@ -29,6 +29,9 @@ namespace servomotor {
 
     public:
 
+        explicit ServoMotor(const Config<Position, Speed> &config) :
+            config{config} {}
+
         /// Обновить состояние сервопривода
         void update() { if (this->is_enabled) { updateRegulator(); }}
 
