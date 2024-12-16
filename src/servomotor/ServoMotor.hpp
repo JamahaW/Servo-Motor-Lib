@@ -1,11 +1,12 @@
 #pragma once
 
 #include "servomotor/Config.hpp"
+#include "servomotor/core/PID.hpp"
 
 
 namespace servomotor {
     /// Интерфейс взаимодействия с сервомотором
-    template<class PositionType = int32_t, class SpeedType = int8_t, class ResetEnumType = char> class ServoMotor {
+    template<class PositionType = int32_t, class SpeedType = int8_t> class ServoMotor {
 
     public:
         /// Тип и единицы измерения позиции
@@ -18,11 +19,11 @@ namespace servomotor {
         /// Конфигурация сервомотора
         const Config<Position, Speed> &config;
 
-        /// Целевая позиция регулятора
-        Position target_position{0};
+        /// Регулятор позиции
+        core::PID<Position> position_regulator;
 
-        /// Целевая скорость достижения позиции
-        Speed target_speed{0};
+        /// Регулятор скорости
+        core::PID<Speed> speed_regulator;
 
         /// Флаг регулирования
         bool is_enabled{false};
@@ -40,18 +41,14 @@ namespace servomotor {
 
         /// Сервомотор достиг целевой позиции
         bool isReady() {
-            return abs(this->target_position - getPosition()) <= this->config.max_position_error;
+            return abs(this->position_regulator.getTarget() - getPosition()) <= this->config.max_position_error;
         };
 
         /// Установить целевую позицию
-        void setPosition(Position new_target_position) {
-            this->target_position = clampToMax(new_target_position, this->config.max_abs_position);
-        }
+        void setPosition(Position new_target_position) { this->position_regulator.setTarget(new_target_position); }
 
         /// Установить целевую скорость
-        void setSpeed(Speed new_target_speed) {
-            this->target_speed = clampToMax(new_target_speed, this->config.max_abs_speed);
-        }
+        void setSpeed(Speed new_target_speed) { this->position_regulator.setTarget(new_target_speed); }
 
         /// Измерить реальное положение
         virtual Position getPosition() = 0;
@@ -60,17 +57,13 @@ namespace servomotor {
         virtual Speed getSpeed() = 0;
 
         /// Сбросить состояния
-        virtual void reset(ResetEnumType flags) = 0;
+        void reset() {};
 
     protected:
 
         /// Обновить регулятор
         virtual void updateRegulator() = 0;
 
-    private:
 
-        template<class T> inline static T clampToMax(T value, T abs_max) {
-            return constrain(value, -abs_max, +abs_max);
-        }
     };
 }

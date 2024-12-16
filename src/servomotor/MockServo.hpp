@@ -16,10 +16,6 @@ namespace servomotor {
 
         Speed getSpeed() override { return this->real_speed; }
 
-        void reset(char flags) override {
-            this->real_speed = 0;
-            this->real_position = 0;
-        }
 
     protected:
         void updateRegulator() override {
