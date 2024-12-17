@@ -1,70 +1,81 @@
 #pragma once
 
+
+#include <Arduino.h>
+#include "servomotor/Types.hpp"
 #include "servomotor/Config.hpp"
 #include "servomotor/core/PID.hpp"
+#include "servomotor/encoders/Encoder.hpp"
+#include "servomotor/drivers/MotorDriver.hpp"
 
 
 namespace servomotor {
-    /// Интерфейс взаимодействия с сервомотором
-    class ServoMotor {
 
-    public:
-        /// Тип и единицы измерения позиции
-        using Position = int32_t;
-
-        /// Тип и единицы измерения скорости
-        using Speed = int8_t;
+    template<class DriverPower> class ServoMotor : public encoders::Encoder {
 
     protected:
         /// Конфигурация сервомотора
-        const Config<Position, Speed> &config;
+        const Config<DriverPower> &config;
 
-        /// Регулятор позиции
-        core::PID<Position> position_regulator;
+        /// Датчик обратной связи по скорости и положению (энкодер)
+        const encoders::Encoder &encoder;
+
+        /// Драйвер установки скорости (мотор)
+        const drivers::MotorDriver<DriverPower> &driver;
+
+        /// Регулятор удержания целевой позиции
+        core::PID<Position, Speed> position_regulator;
 
         /// Регулятор скорости
-        core::PID<Speed> speed_regulator;
+        core::PID<Speed, DriverPower> speed_regulator;
 
         /// Флаг регулирования
         bool is_enabled{false};
 
     public:
 
-        explicit ServoMotor(const Config<Position, Speed> &config) :
-            config{config}, position_regulator{config.position_regulator_settings}, speed_regulator{config.speed_regulator_settings} {}
+        explicit ServoMotor(const Config<DriverPower> &config, const encoders::Encoder &encoder, const drivers::MotorDriver<DriverPower> &driver) :
+            config(config), encoder(encoder), driver(driver),
+            position_regulator(config.position_regulator_settings),
+            speed_regulator(config.speed_regulator_settings) {}
 
-        /// Измерить реальное положение
-        virtual Position getPosition() = 0;
+        Position getPosition() const override {
+            return this->encoder.getPosition();
+        }
 
-        /// Измерить реальную скорость
-        virtual Speed getSpeed() = 0;
+        Speed getSpeed() const override {
+            return this->encoder.getSpeed();
+        }
 
         /// Установить целевую позицию
-        void setPosition(Position new_target_position) { this->position_regulator.setTarget(new_target_position); }
+        void setPosition(Position new_target_position) {
+            this->position_regulator.setTarget(new_target_position);
+        }
 
         /// Установить целевую скорость
-        void setSpeed(Speed new_target_speed) { this->speed_regulator.setTarget(new_target_speed); }
+        void setSpeed(Speed new_target_speed) {
+            this->speed_regulator.setRange(core::Range<DriverPower>{-new_target_speed, new_target_speed});
+        }
 
         /// Установить активность поддержание контура регулирования
-        void setEnabled(bool enable) { this->is_enabled = enable; }
+        void setEnabled(bool enable) {
+            this->is_enabled = enable;
+        }
 
         /// Сервомотор достиг целевой позиции
         bool isReady() {
-            return abs(this->position_regulator.getTarget() - getPosition()) <= this->config.max_position_error;
+            Position delta = this->position_regulator.getTarget() - getPosition();
+            return abs(delta) <= this->config.target_position_deviation;
         };
 
         /// Обновить состояние сервопривода
         void update() {
-            if (not this->is_enabled) {
-                return;
+            if (this->is_enabled) {
+                this->speed_regulator.setTarget(this->position_regulator.calc(getPosition()));
+                this->driver.setPower(this->speed_regulator.calc(getSpeed()));
             }
-
-            auto driver_u = this->speed_regulator.calc(getSpeed());
-            // TODO struct контур регулирования: PID + get + write
-            // driver.write(driver_u)
-
-            auto speed_u = static_cast<Speed>(this->position_regulator.calc(getPosition()));
-            // setSpeed(speed_u)
         }
+
+
     };
 }

@@ -1,63 +1,72 @@
 #pragma once
 
+#include "Arduino.h"
+#include "servomotor/Types.hpp"
+#include "Tools.hpp"
+
+
 namespace servomotor {
     namespace core {
 
-        template<class T> struct PIDSettings {
-            float kp;
-            float ki;
-            float kd;
-            T value_abs_max;
+        template<class T> struct Range {
+            T min, max;
 
-            T clamp(T value) const { return constrain(value, -this->value_abs_max, this->value_abs_max); }
+            T clamp(T value) const {
+                return constrain(value, this->min, this->max);
+            }
+        };
+
+        /// настройки регулятора
+        template<class Input, class Output> struct PIDSettings {
+            float kp, ki, kd;
+            Range<Input> input_range;
+            Range<Output> output_range;
         };
 
         /// ПИД-Регулятор
-        template<class T, class TimeType = uint32_t> class PID {
+        template<class Input, class Output> class PID {
+
         private:
+            const PIDSettings<Input, Output> &settings;
 
-            using TimeMs = TimeType;
-            const PIDSettings<T> settings;
-
-            T target{0};
-
-            mutable T last_error{0};
-            mutable T accumulated_error{0};
+            mutable Output last_error{0};
+            mutable Output accumulated_error{0};
             mutable TimeMs last_time{0};
+
+            Output target{0};
 
         public:
 
-            explicit PID(const PIDSettings<T> settings) :
+            /// Установить целевое значение
+            void setTarget(Input new_target) { this->target = this->settings.input_range.clamp(new_target); }
+
+            /// Установить диапазон выходных значений
+            void setRange(Range<Output> range) { this->settings.output_range = range; }
+
+            /// Получить целевое значение
+            Output getTarget() { return this->target; }
+
+            explicit PID(const PIDSettings<Input, Output> &settings) :
                 settings{settings} {}
 
-            /// Установить целевое значение регулятора
-            void setTarget(T new_target) { this->target = this->settings.clamp(new_target); }
-
-            /// Получить целевое значение регулятора
-            T getTarget() { return this->target; }
 
             /// Получить значение регулятора
-            T calc(T input) {
-                const T error = this->target - input;
-                const TimeMs delta = getCurrentTime() - last_time;
+            Output calc(Input input) {
+                const Output error = target - static_cast<Output>(input);
+                const TimeMs delta = core::getCurrentTime() - last_time;
 
-                T d_term{0};
+                Output d_term{0};
 
                 if (delta > 0) {
-                    this->accumulated_error += error * delta;
-                    d_term = this->settings.kd * (error - last_error) / delta;
+                    accumulated_error += error * delta;
+                    d_term = settings.kd * (error - last_error) / delta;
                 }
 
                 last_error = error;
-                last_time = getCurrentTime();
+                last_time = core::getCurrentTime();
 
-                return (error * this->settings.kp) + (this->accumulated_error * this->settings.ki) + d_term;
+                return settings.output_range.clamp((error * settings.kp) + (accumulated_error * settings.ki) + d_term);
             }
-
-        private:
-
-            inline static TimeMs getCurrentTime() { return reinterpret_cast<TimeMs>(millis()); }
-
 
         };
 

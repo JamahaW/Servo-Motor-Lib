@@ -1,17 +1,18 @@
 #pragma once
 
 #include "servomotor/core/PID.hpp"
+#include "Types.hpp"
 
 
 namespace servomotor {
-    template<class PositionType, class SpeedType> struct Config {
-        /// Настройки регулятора скорости
-        core::PIDSettings<SpeedType> speed_regulator_settings;
+    template<class DriverPower> struct Config {
+        /// Настройки регулятора смещения
+        core::PIDSettings<Speed, DriverPower> speed_regulator_settings;
 
         /// Настройки регулятора позиции
-        core::PIDSettings<PositionType> position_regulator_settings;
+        core::PIDSettings<Position, Speed> position_regulator_settings;
 
         /// Максимально допустимое отклонение от целевой позиции
-        PositionType max_position_error;
+        Position target_position_deviation;
     };
 }
