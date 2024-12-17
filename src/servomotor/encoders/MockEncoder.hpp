@@ -2,7 +2,6 @@
 
 #include "servomotor/encoders/Encoder.hpp"
 #include "servomotor/core/Tools.hpp"
-#include "servomotor/core/Differentiator.hpp"
 
 
 namespace servomotor {
@@ -16,10 +15,11 @@ namespace servomotor {
 
         private:
             core::Differentiator<Position> differentiator{};
+            mutable core::Chronometer chronometer{};
 
         public:
             Speed getSpeed() const override {
-                return this->differentiator.calc(this->current_position);
+                return this->differentiator.calc(this->current_position, chronometer.getDeltaTime());
             }
 
             Position getPosition() const override { return this->current_position; }
