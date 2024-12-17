@@ -13,6 +13,7 @@ namespace servomotor {
             float kp, ki, kd;
             Range<Input> input_range;
             Range<Output> output_range;
+            Range<Output> integral_range;
 
             Output calc(Output p, Output i, Output d) const {
                 return output_range.clamp((p * kp) + (i * ki) + (d * kd));
@@ -26,7 +27,7 @@ namespace servomotor {
             const PIDSettings<Input, Output> &settings;
 
             Differentiator<Output> differentiator{};
-            Integrator<Output> integrator{};
+            Integrator<Output> integrator;
             Chronometer chronometer{};
 
             Output target{0};
@@ -34,7 +35,7 @@ namespace servomotor {
         public:
 
             explicit PID(const PIDSettings<Input, Output> &settings) :
-                settings{settings} {}
+                settings{settings}, integrator(settings.integral_range) {}
 
             /// Установить целевое значение
             void setTarget(Input new_target) { this->target = this->settings.input_range.clamp(new_target); }

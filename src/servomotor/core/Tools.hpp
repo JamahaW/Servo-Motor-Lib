@@ -60,16 +60,18 @@ namespace servomotor {
             /// Ограничение значений
             Range<T> range;
 
-            /// Интеграл значения
-            mutable T accumulated_value{0};
+            mutable T integral{0};
 
         public:
+            explicit Integrator(Range<T> range) :
+                range{range} {}
+
             T calc(T current_value, TimeMs dt) const {
                 if (dt > 0) {
-                    accumulated_value = range.clamp(accumulated_value + current_value * dt);
+                    integral = range.clamp(integral + current_value * dt);
                 }
 
-                return accumulated_value;
+                return integral;
             }
         };
     }
