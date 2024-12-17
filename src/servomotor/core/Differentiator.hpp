@@ -11,7 +11,7 @@ namespace servomotor {
 
         private:
             /// Значение в предыдущий момент
-            Position last_value{0};
+            T last_value{0};
 
             /// Время предыдущего расчёта
             TimeMs last_time{0};
