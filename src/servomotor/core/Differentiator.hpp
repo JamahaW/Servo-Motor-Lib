@@ -11,18 +11,18 @@ namespace servomotor {
 
         private:
             /// Значение в предыдущий момент
-            T last_value{0};
+            mutable T last_value{0};
 
             /// Время предыдущего расчёта
-            TimeMs last_time{0};
+            mutable TimeMs last_time{0};
 
             /// Возвращаемое значение
-            Speed diff{0};
+            mutable Speed diff{0};
 
         public:
 
             /// Рассчитать производную
-            T calc(T current_value) {
+            T calc(T current_value) const {
                 TimeMs now = core::getCurrentTime();
                 TimeMs dt = now - last_time;
 
