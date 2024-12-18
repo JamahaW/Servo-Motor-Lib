@@ -19,4 +19,13 @@ namespace servomotor {
 
     /// Вывод
     using Pin = uint8_t;
+
+    /// Направление
+    enum class Direction : uint8_t {
+        /// Прямое
+        forward = 0x00,
+
+        /// Обратное
+        reverse = 0x01
+    };
 }
