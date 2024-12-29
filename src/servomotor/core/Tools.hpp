@@ -39,7 +39,7 @@ namespace servomotor {
             mutable T last_value{0};
 
             /// Возвращаемое значение
-            mutable Speed diff{0};
+            mutable T diff{0};
 
         public:
 

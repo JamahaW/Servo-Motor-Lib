@@ -5,7 +5,7 @@
 
 namespace servomotor {
     /// Тип и единицы измерения позиции
-    using Position = int32_t;
+    using Position = int64_t;
 
     /// Тип и единица измерения времени
     using TimeMs = uint32_t;
@@ -15,7 +15,7 @@ namespace servomotor {
      *
      * Speed = Position / TimeMs
      * */
-    using Speed = int16_t;
+    using Speed = int8_t;
 
     /// Вывод
     using Pin = uint8_t;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "servomotor/drivers/MotorDriver.hpp"
+#include "Arduino.h"
 
 
 namespace servomotor {
