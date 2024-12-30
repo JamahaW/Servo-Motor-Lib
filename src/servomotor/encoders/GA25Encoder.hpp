@@ -13,7 +13,7 @@ namespace servomotor {
             const Pin phase_beta;
             const Direction direction;
 
-            static constexpr int DIFF_K = 10;
+            static constexpr int DIFF_K = 100;
 
             mutable volatile Position current_position{0};
             core::Differentiator<Position> differentiator{};

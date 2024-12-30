@@ -15,7 +15,7 @@ namespace servomotor {
      *
      * Speed = Position / TimeMs
      * */
-    using Speed = int8_t;
+    using Speed = float;
 
     /// Вывод
     using Pin = uint8_t;

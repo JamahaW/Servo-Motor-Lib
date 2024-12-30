@@ -26,11 +26,11 @@ namespace servomotor {
         private:
             const PIDSettings<Input, Output> &settings;
 
-            Differentiator<Output> differentiator{};
+            Differentiator<Input> differentiator{};
             Integrator<Output> integrator;
             Chronometer chronometer{};
 
-            Output target{0};
+            Input target{0};
 
         public:
 
@@ -41,14 +41,17 @@ namespace servomotor {
             void setTarget(Input new_target) { this->target = this->settings.input_range.clamp(new_target); }
 
             /// Установить диапазон выходных значений
-            void setRange(Range<Output> range) { this->settings.output_range = range; }
+            void setRange(Output min, Output max) {
+                this->settings.output_range.max = max;
+                this->settings.output_range.min = min;
+            }
 
             /// Получить целевое значение
             Output getTarget() { return this->target; }
 
             /// Получить значение регулятора
             Output calc(Input input) {
-                const Output error = target - static_cast<Output>(input);
+                const Input error = target - (input);
                 const TimeMs dt = chronometer.getDeltaTime();
                 return settings.calc(error, integrator.calc(error, dt), differentiator.calc(error, dt));
             }

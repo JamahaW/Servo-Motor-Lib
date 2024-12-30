@@ -54,7 +54,7 @@ namespace servomotor {
 
         /// Установить целевую скорость
         void setSpeed(Speed new_target_speed) {
-            this->speed_regulator.setRange(core::Range<DriverPower>{-new_target_speed, new_target_speed});
+            this->speed_regulator.setRange(-new_target_speed, new_target_speed);
         }
 
         /// Установить активность поддержание контура регулирования
