@@ -13,11 +13,7 @@ namespace servomotor {
             const Pin phase_beta;
             const Direction direction;
 
-            static constexpr int DIFF_K = 100;
-
             mutable volatile Position current_position{0};
-            core::Differentiator<Position> differentiator{};
-            mutable core::Chronometer chronometer{};
 
         public:
 
@@ -27,20 +23,16 @@ namespace servomotor {
                 attachInterrupt(digitalPinToInterrupt(phase_alpha), on_encoder_move, RISING);
             }
 
-            Speed getSpeed() const override {
-                return static_cast<Speed>(differentiator.calc(current_position, chronometer.getDeltaTime()));
-            }
-
             Position getPosition() const override {
-                return this->current_position;
+                return current_position;
             }
 
             /// Вызывать в обработчике прерываний
             void onEncoderMoved() const {
-                if (digitalRead(this->phase_beta) == (direction == Direction::forward)) {
-                    this->current_position += DIFF_K;
+                if (digitalRead(phase_beta) == (direction == Direction::forward)) {
+                    current_position++;
                 } else {
-                    this->current_position -= DIFF_K;
+                    current_position--;
                 }
             }
         };

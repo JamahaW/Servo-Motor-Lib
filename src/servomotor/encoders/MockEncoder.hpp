@@ -15,14 +15,13 @@ namespace servomotor {
 
         private:
             core::Differentiator<Position> differentiator{};
-            mutable core::Chronometer chronometer{};
 
         public:
-            Speed getSpeed() const override {
-                return this->differentiator.calc(this->current_position, chronometer.getDeltaTime());
+            Speed getSpeed(TimeMs dt) const override {
+                return differentiator.calc(current_position, dt);
             }
 
-            Position getPosition() const override { return this->current_position; }
+            Position getPosition() const override { return current_position; }
         };
     }
 }

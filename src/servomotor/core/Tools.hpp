@@ -16,13 +16,13 @@ namespace servomotor {
             T clamp(T value) const { return constrain(value, this->min, this->max); }
         };
 
-        /// Хронометр - Рассчитывает dt
+        /// Хронометр - Рассчитывает delta_time_ms
         class Chronometer {
             /// Время предыдущего расчёта
             TimeMs last_time{0};
 
         public:
-            /// Рассчитать dt с предыдущей итерации
+            /// Рассчитать delta_time_ms с предыдущей итерации
             TimeMs getDeltaTime() {
                 TimeMs now = getCurrentTime();
                 TimeMs dt = now - last_time;
@@ -57,18 +57,14 @@ namespace servomotor {
         /// Вспомогательный класс аккумулирует значения
         template<class T> class Integrator {
         private:
-            /// Ограничение значений
-            Range<T> range;
 
             mutable T integral{0};
 
         public:
-            explicit Integrator(Range<T> range) :
-                range{range} {}
 
             T calc(T current_value, TimeMs dt) const {
                 if (dt > 0) {
-                    integral = range.clamp(integral + current_value * dt);
+                    integral += current_value * dt;
                 }
 
                 return integral;

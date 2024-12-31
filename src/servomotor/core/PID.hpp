@@ -8,52 +8,26 @@
 namespace servomotor {
     namespace core {
 
-        /// настройки регулятора
-        template<class Input, class Output> struct PIDSettings {
-            float kp, ki, kd;
-            Range<Input> input_range;
-            Range<Output> output_range;
-            Range<Output> integral_range;
-
-            Output calc(Output p, Output i, Output d) const {
-                return output_range.clamp((p * kp) + (i * ki) + (d * kd));
-            }
-        };
 
         /// ПИД-Регулятор
-        template<class Input, class Output> class PID {
-
-        private:
-            const PIDSettings<Input, Output> &settings;
-
-            Differentiator<Input> differentiator{};
-            Integrator<Output> integrator;
-            Chronometer chronometer{};
-
-            Input target{0};
+        class PID {
 
         public:
+            float kp, ki, kd;
 
-            explicit PID(const PIDSettings<Input, Output> &settings) :
-                settings{settings}, integrator(settings.integral_range) {}
+            Differentiator<Position> differentiator{};
+            Integrator<Position> integrator{};
 
-            /// Установить целевое значение
-            void setTarget(Input new_target) { this->target = this->settings.input_range.clamp(new_target); }
+            Position target{0};
 
-            /// Установить диапазон выходных значений
-            void setRange(Output min, Output max) {
-                this->settings.output_range.max = max;
-                this->settings.output_range.min = min;
-            }
-
-            /// Получить целевое значение
-            Output getTarget() { return this->target; }
+            explicit PID(float p, float i, float d) :
+                kp{p}, ki{i}, kd{d} {}
 
             /// Получить значение регулятора
-            Output calc(Input input) {
-                const Input error = target - (input);
-                const TimeMs dt = chronometer.getDeltaTime();
-                return settings.calc(error, integrator.calc(error, dt), differentiator.calc(error, dt));
+            Position calc(Position input, TimeMs dt) {
+                Position error = target - input;
+
+                return Position((error * kp) + (integrator.calc(error, dt) * ki) + (differentiator.calc(error, dt) * kd));
             }
         };
     }

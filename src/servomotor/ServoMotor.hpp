@@ -24,10 +24,10 @@ namespace servomotor {
         const drivers::MotorDriver<DriverPower> &driver;
 
         /// Регулятор удержания целевой позиции
-        core::PID<Position, Speed> position_regulator;
+        core::PID position_regulator;
 
         /// Регулятор скорости
-        core::PID<Speed, DriverPower> speed_regulator;
+        core::PID speed_regulator;
 
         /// Флаг регулирования
         bool is_enabled{false};
@@ -41,10 +41,6 @@ namespace servomotor {
 
         Position getPosition() const override {
             return this->encoder.getPosition();
-        }
-
-        Speed getSpeed() const override {
-            return this->encoder.getSpeed();
         }
 
         /// Установить целевую позицию
@@ -72,7 +68,7 @@ namespace servomotor {
         void update() {
             if (this->is_enabled) {
                 this->speed_regulator.setTarget(this->position_regulator.calc(getPosition()));
-                this->driver.setPower(this->speed_regulator.calc(getSpeed()));
+//                this->driver.setPower(this->speed_regulator.calc(getSpeed()));
             }
         }
 
